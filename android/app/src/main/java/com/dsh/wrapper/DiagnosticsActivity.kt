@@ -93,6 +93,9 @@ class DiagnosticsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.diag_refresh).setOnClickListener { refreshAll() }
         findViewById<Button>(R.id.diag_send).setOnClickListener { collectAndShare() }
         findViewById<Button>(R.id.diag_wipe).setOnClickListener { confirmWipe() }
+        findViewById<Button>(R.id.diag_terminal).setOnClickListener {
+            startActivity(Intent(this, TerminalActivity::class.java))
+        }
         findViewById<Button>(R.id.diag_key_save).setOnClickListener { saveKey() }
         findViewById<Button>(R.id.diag_key_clear).setOnClickListener { clearKey() }
 

@@ -57,5 +57,14 @@
     <string name="diag_key_saved">Ключ сохранён в защищённое хранилище</string>
     <string name="diag_key_empty">Вставьте ключ сначала</string>
     <string name="diag_key_present">ZEN_API_KEY: задан (значение не показываем)</string>
-    <string name="diag_key_absent">ZEN_API_KEY: не задан — Zen не стартует</string>
+    <string name="diag_key_absent">ZEN_API_KEY: не задан — Zen на встроенном ключе</string>
+    <!-- Терминал (phase 3) -->
+    <string name="term_hint">Терминал proot: команды идут в гостя (bash -lc), таймаут 60 с. «clear» чистит экран.</string>
+    <string name="term_input_hint">команда…</string>
+    <string name="term_run">Пуск</string>
+    <string name="term_no_bootstrap">Нет bootstrap — сначала дождитесь установки окружения.</string>
+    <string name="term_timeout">Таймаут 60 с, процесс убит.</string>
+    <string name="term_rc">rc=%1$d (пустой вывод)</string>
+    <string name="term_failed">Ошибка запуска: %1$s</string>
+    <string name="diag_terminal">Терминал</string>
 </resources>

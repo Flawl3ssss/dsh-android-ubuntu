@@ -41,3 +41,43 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 }
+
+// Phase 3: stage proot bootstrap (scripts + distro.json + payload + log-collect)
+// into src/main/assets/bootstrap BEFORE every build. The APK carries scripts;
+// BootstrapInstaller extracts them to filesDir/dsh-bootstrap at runtime.
+tasks.register('syncProotBootstrap') {
+    def prootDir = file('../../proot')
+    def scriptsDir = file('../../scripts')
+    def outDir = file('src/main/assets/bootstrap')
+    outputs.dir(outDir)
+    doLast {
+        delete(outDir)
+        mkdir(outDir)
+        copy {
+            from(prootDir) { include '*.sh'; include 'distro.json' }
+            into(outDir)
+        }
+        copy {
+            from(new File(prootDir, 'payload')) { include '*' }
+            into(new File(outDir, 'payload'))
+        }
+        copy {
+            from(scriptsDir) { include 'log-collect.sh' }
+            into(outDir)
+        }
+        // bootstrap.manifest: relative path + sha256, consumed by BootstrapInstaller.
+        def md = java.security.MessageDigest.getInstance('SHA-256')
+        def lines = []
+        fileTree(outDir).visit { d ->
+            if (!d.isDirectory()) {
+                def rel = outDir.toPath().relativize(d.file.toPath()).toString()
+                def bytes = d.file.bytes
+                md.reset()
+                lines << rel + ' ' + md.digest(bytes).encodeHex().toString()
+            }
+        }
+        new File(outDir, 'bootstrap.manifest').text = lines.sort().join('\n') + '\n'
+        logger.lifecycle("syncProotBootstrap: ${lines.size()} files staged")
+    }
+}
+tasks.named('preBuild').configure { dependsOn('syncProotBootstrap') }

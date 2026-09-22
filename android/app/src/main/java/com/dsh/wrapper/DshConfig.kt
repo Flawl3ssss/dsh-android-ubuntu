@@ -55,7 +55,7 @@ object DshConfig {
      * (сторона architect-proot/task-1 — здесь только контракт). */
     const val TRUSTED_HOST = "127.0.0.1:8081"
 
-    // ---------- Zen sidecar (контракт logs-qa/task-8, LOGS-ZEN.md §4) ----------
+    // ---------- Zen sidecar (phase 3: guest node inside proot) ----------
     /** Base URL Zen-адаптера (хостовый loopback-процесс, не гость proot). */
     const val ZEN_BASE_URL = "http://127.0.0.1:8787/v1"
     const val ZEN_MODELS_URL = "$ZEN_BASE_URL/models"

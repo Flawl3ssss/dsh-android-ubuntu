@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -31,6 +32,7 @@ class DshService : Service() {
 
     private var prootProcess: Process? = null
     private val running = AtomicBoolean(false)
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -42,6 +44,7 @@ class DshService : Service() {
             ACTION_STOP -> {
                 Log.i(DshConfig.LOG_TAG, "user stop")
                 stopProot()
+                releaseWakeLock()
                 ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return START_NOT_STICKY
@@ -75,7 +78,27 @@ class DshService : Service() {
         // proot НЕ убиваем: пережить смерть сервиса — шанс дожить до
         // keep-alive рестарта. Останавливаем только по ACTION_STOP.
         running.set(false)
+        releaseWakeLock()
         super.onDestroy()
+    }
+
+    private fun acquireWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) return
+            val pm = getSystemService(PowerManager::class.java)
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, DshConfig.LOG_TAG + ":supervise")
+            wakeLock?.acquire()
+        } catch (e: Exception) {
+            Log.w(DshConfig.LOG_TAG, "wakelock acquire failed", e)
+        }
+    }
+
+    private fun releaseWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) wakeLock?.release()
+        } catch (_: Exception) {
+        }
+        wakeLock = null
     }
 
     // ---------- foreground ----------
@@ -141,6 +164,11 @@ class DshService : Service() {
     // ---------- proot ----------
 
     private fun startProot() {
+        if (!BootstrapInstaller.ensure(this)) {
+            updateNotification(getString(R.string.notif_waiting_bootstrap))
+            return
+        }
+        acquireWakeLock()
         val script = File(File(filesDir, DshConfig.BOOTSTRAP_DIR), DshConfig.PROOT_LAUNCH_SCRIPT)
         if (!script.canExecute()) {
             Log.w(DshConfig.LOG_TAG, "no bootstrap script yet: $script")
@@ -154,6 +182,7 @@ class DshService : Service() {
                 .redirectOutput(ProcessBuilder.Redirect.appendTo(log))
                 .redirectError(ProcessBuilder.Redirect.appendTo(log))
             // Окружение для dsh web (точка запуска фиксирует dsh-insider, task-3).
+            pb.environment()["APP_FILES"] = filesDir.absolutePath
             pb.environment()["DSH_PORT"] = "8081"
             // TERMINAL §5: иначе встроенный WebView получит 401 от dsh web.
             pb.environment()["DSH_TRUSTED_HOST"] = DshConfig.TRUSTED_HOST

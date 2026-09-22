@@ -5,13 +5,12 @@ import android.util.Log
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-/**
- * Хостовый Zen sidecar (контракт logs-qa/task-8, LOGS-ZEN.md §4).
- *
- * Обёртка над `launch-zen.sh {start|status|health|stop}` из BOOTSTRAP_DIR.
- * Источник истины health — exit-код скрипта (GET /v1/models → 200).
- * Секрет передаётся только через env дочернего процесса, fail-closed:
- * пустой ключ = отказ старта (скрипт сам делает FATAL, сюда не доходим).
+/** Phase 3: zen-adapter.mjs on guest node INSIDE proot (see entry.sh).
+ * Wrapper over `launch-zen.sh {start|status|health|stop}` from BOOTSTRAP_DIR
+ * (shim over entry.sh: zen starts first, then dsh).
+ * Health source of truth: script exit code (GET /v1/models -> 200).
+ * Secret travels only via child process env. Empty key = adapter builtin-key
+ * mode (UI works, paid upstream models do not).
  */
 object ZenManager {
 
@@ -25,8 +24,7 @@ object ZenManager {
     fun start(context: Context): Boolean {
         val key = ZenKeyStore.getKey(context)
         if (key.isNullOrEmpty()) {
-            Log.i(DshConfig.LOG_TAG, "zen start skipped: no ZEN_API_KEY (fail-closed)")
-            return false
+            Log.i(DshConfig.LOG_TAG, "zen start: no ZEN_API_KEY, builtin-key mode")
         }
         val script = scriptFile(context)
         if (!script.canExecute() && !script.exists()) {
