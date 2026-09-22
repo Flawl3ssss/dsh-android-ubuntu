@@ -57,8 +57,13 @@ jobs:
 
       - name: Secret scan (fail on leaked tokens)
         run: |
+          # NOTE: proot/payload/ is vendored + integrity-pinned
+          # (proot/payload/zen-adapter.sha256). The zen-adapter carries its
+          # PUBLIC builtin fallback key (sk-...), not ours — user keys live
+          # only in Secrets/Settings and never in the repo. So payload/ is
+          # excluded here; its checksum change is reviewed like code.
           ! grep -rInE 'github_pat_[A-Za-z0-9_]{22,}|gh[pousr]_[A-Za-z0-9]{36}|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|xox[bap]-[A-Za-z0-9-]{10,}' \
-            --exclude-dir=node_modules --exclude-dir=.git --exclude=*.md . || \
+            --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=payload --exclude=*.md . || \
             (echo 'LEAKED SECRET PATTERN FOUND'; exit 1)
 
       - name: Build debug APK
