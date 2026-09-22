@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DSH</string>
+
+    <!-- Сплэш -->
+    <string name="splash_waiting">Запускаем DSH… (первый старт после установки может занять минуту)</string>
+    <string name="splash_failed">Не удалось дождаться DSH. Проверьте уведомление сервиса и попробуйте снова.</string>
+    <string name="retry">Повторить</string>
+
+    <!-- Уведомление сервиса -->
+    <string name="notif_channel">DSH фоновая работа</string>
+    <string name="notif_title">DSH работает в фоне</string>
+    <string name="notif_starting">Запуск окружения…</string>
+    <string name="notif_running">Окружение запущено, WebView: 127.0.0.1:8081</string>
+    <string name="notif_waiting_bootstrap">Жду файлы окружения…</string>
+    <string name="notif_failed">Ошибка запуска, откройте приложение</string>
+    <string name="notif_restart">Перезапустить</string>
+    <string name="notif_stop">Остановить</string>
+
+    <!-- Батарея -->
+    <string name="battery_banner">Для стабильной работы в фоне отключите оптимизацию батареи для DSH.</string>
+    <string name="battery_open">Настроить</string>
+    <string name="battery_title">Работа в фоне</string>
+    <string name="battery_why">Android может останавливать DSH при выключенном экране. Разрешите работу без ограничений — иначе после гашения экрана интерфейс перестанет отвечать до перезапуска.</string>
+    <string name="battery_ok">Оптимизация батареи отключена. Всё хорошо.</string>
+    <string name="battery_not_ignored">Оптимизация батареи ВКЛЮЧЕНА — DSH будет засыпать.</string>
+    <string name="battery_allow">Разрешить работу без ограничений</string>
+    <string name="battery_vendor">Инструкция для Xiaomi / Samsung</string>
+    <string name="battery_vendor_hint">Откройте VENDOR-SURVIVAL.md в репозитории: настройки автозапуска и «не выгружать».</string>
+    <string name="battery_continue">Продолжить</string>
+    <string name="battery_manual">Откройте настройки вручную: Батарея → Оптимизация → DSH → Не оптимизировать.</string>
+
+    <!-- Share -->
+    <string name="share_empty">Нечего сохранять: нет файлов во входящем запросе.</string>
+    <string name="share_saved">Сохранено: %1$s</string>
+    <string name="share_failed">Не удалось сохранить файлов: %1$d</string>
+    <string name="share_too_big">Файл %1$s больше 100 МБ — через «Поделиться» не влезет, положите его через /mfiles чанками.</string>
+    <!-- Диагностика (LOGS-ZEN §2) -->
+    <string name="diag_open">Диагностика</string>
+    <string name="diag_dsh_label">DSH: %1$s</string>
+    <string name="diag_zen_ok">Zen: ok (%1$s)</string>
+    <string name="diag_zen_fail">Zen: fail (%1$s)</string>
+    <string name="diag_refresh">Обновить</string>
+    <string name="diag_send">Отправить логи</string>
+    <string name="diag_wipe">Стереть логи</string>
+    <string name="diag_autoscroll">Вниз</string>
+    <string name="diag_no_source">Нет данных: %1$s</string>
+    <string name="diag_sent">Сохранено в Download и готово к отправке: %1$s</string>
+    <string name="diag_collect_failed">Не удалось собрать логи: %1$s</string>
+    <string name="diag_wiped">Логи стёрты</string>
+    <string name="diag_wipe_confirm_title">Стереть логи?</string>
+    <string name="diag_wipe_confirm_message">Файлы будут усечены (truncate), logcat очищен. DSH продолжит писать в те же файлы.</string>
+    <string name="diag_wipe_yes">Стереть</string>
+    <string name="diag_key_hint">ZEN_API_KEY</string>
+    <string name="diag_key_save">Сохранить</string>
+    <string name="diag_key_clear">Забыть</string>
+    <string name="diag_key_saved">Ключ сохранён в защищённое хранилище</string>
+    <string name="diag_key_empty">Вставьте ключ сначала</string>
+    <string name="diag_key_present">ZEN_API_KEY: задан (значение не показываем)</string>
+    <string name="diag_key_absent">ZEN_API_KEY: не задан — Zen не стартует</string>
+</resources>

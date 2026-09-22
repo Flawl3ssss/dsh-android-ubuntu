@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "distro": "ubuntu",
+  "release": "24.04.5 LTS (noble)",
+  "arch": "arm64",
+  "rootfs": {
+    "format": "tar.gz",
+    "url": "https://cdimage.ubuntu.com/ubuntu-base/releases/24.04/release/ubuntu-base-24.04.5-base-arm64.tar.gz",
+    "sha256": "a91d5a93010193712d346d761372b7c9db6dfcf093893161c64ca107f05914f2",
+    "size": 29936675,
+    "note": "Official ubuntu-base 24.04.5 arm64; sha256 from release SHA256SUMS. Was Debian bookworm — switched to Ubuntu per requirement."
+  },
+  "node": {
+    "version": "24.18.1",
+    "arch": "linux-arm64",
+    "tarball": "https://nodejs.org/dist/v24.18.1/node-v24.18.1-linux-arm64.tar.xz",
+    "sha256": "7201e3a09dc825bac57867c81913e2b8f0ef87d04cb9082af4cda82f6ff3d88c"
+  },
+  "dsh": {
+    "npm_package": "@deepseek-ai/dsh",
+    "version": "0.1.6-alpha.2",
+    "channel": "alpha",
+    "npm_tag": "alpha",
+    "channel_note": "Channels for update-guard (task-6): stable -> npm tag 'latest', alpha -> npm tag 'alpha'. install.sh pins exact version; update-dsh.sh resolves channel->version."
+  },
+  "proot": {
+    "note": "System /usr/bin/proot is BROKEN on target devices (musl build; bundled libtalloc.so.2 expects glibc symbols __register_atfork/__errno/__gnu_strerror_r -> relocation error, verified on device image). NEVER use it. Use libproot.so shipped inside the APK.",
+    "loader": "libproot.so",
+    "invoke": "/system/bin/linker64 <libdir>/libproot.so",
+    "libs": [
+      "libproot.so",
+      "libtalloc.so",
+      "libandroid-shmem.so"
+    ],
+    "libs_note": "All three .so stay in ONE directory (RUNPATH $ORIGIN). Extracted from APK lib/arm64-v8a/ at build/install time.",
+    "apk_lib_dir": "lib/arm64-v8a"
+  },
+  "layout_on_device": {
+    "app_files": "<app-files> = Context.getFilesDir()",
+    "libdir": "<app-files>/proot/lib/",
+    "rootfs": "<app-files>/proot/rootfs/",
+    "node_guest": "/opt/node (inside rootfs)",
+    "dsh_home_host": "<app-files>/dsh-home/",
+    "dsh_home_guest": "/dsh-home",
+    "run": "<app-files>/dsh/run/ (dsh.pid)",
+    "logs": "<app-files>/dsh/logs/ (dsh.out.log)",
+    "ab_note": "Reserved for update-guard (task-6): A/B rootfs prefixes + 'current' symlink live UNDER <app-files>/proot/ (e.g. rootfs.A/, rootfs.B/, current -> A). launch-dsh.sh resolves ROOTFS via the symlink when present, else ./rootfs."
+  },
+  "binds": [
+    {
+      "host": "/dev",
+      "guest": "/dev",
+      "mode": "rw"
+    },
+    {
+      "host": "/proc",
+      "guest": "/proc",
+      "mode": "rw"
+    },
+    {
+      "host": "/sys",
+      "guest": "/sys",
+      "mode": "ro"
+    },
+    {
+      "host": "/sdcard/Download",
+      "guest": "/phone/Download",
+      "mode": "rw",
+      "note": "requires storage permission; bind skipped if dir unreadable"
+    },
+    {
+      "host": "/sdcard/DCIM",
+      "guest": "/phone/DCIM",
+      "mode": "ro",
+      "note": "photo input for agents; read-only by default"
+    },
+    {
+      "host": "<app-files>/dsh-home",
+      "guest": "/dsh-home",
+      "mode": "rw"
+    }
+  ],
+  "web": {
+    "host": "127.0.0.1",
+    "port": 8081,
+    "url": "http://127.0.0.1:8081/",
+    "launch": "dsh --profile web --host 127.0.0.1 --port 8081 --no-open",
+    "env": {
+      "DSH_HOME": "/dsh-home",
+      "HOME": "/root",
+      "PATH": "/opt/node/bin:/usr/local/bin:/usr/bin:/bin"
+    }
+  },
+  "contract_for_android_shell": {
+    "entrypoint": "launch-dsh.sh start|stop|status",
+    "health": "healthcheck.sh [--wait SECS]",
+    "pidfile": "<app-files>/dsh/run/dsh.pid",
+    "log": "<app-files>/dsh/logs/dsh.out.log"
+  }
+}
