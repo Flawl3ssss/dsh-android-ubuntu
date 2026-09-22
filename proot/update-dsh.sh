@@ -280,6 +280,12 @@ slot_guest_env() {
   printf '%s' "env -i HOME=/root USER=root TERM=xterm-256color LANG=C.UTF-8 LC_ALL=C.UTF-8 DSH_HOME=/dsh-home PATH=/opt/node/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 }
 
+
+slot_run_npm() {
+  _slot="$1"; shift
+  env -u PREFIX PATH="/opt/node/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH" HOME=/root sh -c "$(slot_base_cmd "$_slot") $*"
+}
+
 # slot_run <slot> <cmd...>: выполнить простую команду в слоте, вернуть её код.
 slot_run() {
   _slot="$1"; shift
@@ -482,7 +488,7 @@ prepare_slot() {
   rm -rf "$_dst"
   cp -a "$_src" "$_dst" || die "клонирование слота не удалось"
   log "Guest npm upgrade в $(slot_name "$_dst"): @deepseek-ai/dsh@$_ver ..."
-  slot_run "$_dst" npm install -g "@deepseek-ai/dsh@$_ver" \
+  slot_run_npm "$_dst" npm install -g --prefix /opt/node "@deepseek-ai/dsh@$_ver" \
     || { log "ERROR: guest npm install не удался"; return 1; }
   return 0
 }

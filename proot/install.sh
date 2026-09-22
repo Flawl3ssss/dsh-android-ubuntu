@@ -61,11 +61,15 @@ if [ ! -f "$STAMPS/rootfs.done" ]; then
   need curl
   RF_URL="$(json rootfs.url)"; RF_SHA="$(json rootfs.sha256)"
   case "$RF_SHA" in FILL-IN*) die "distro.json rootfs.sha256 not filled — refuse to install unverified rootfs";; esac
-  TMP_TARBALL="$APP_FILES/proot/rootfs.tar.xz"
+  RF_FMT="$(json rootfs.format)"
+  case "$RF_FMT" in tar.gz) TAR_FLAG="-xzf"; TB_SUFFIX="tar.gz";; tar.xz) TAR_FLAG="-xJf"; TB_SUFFIX="tar.xz";; *) die "distro.json rootfs.format must be tar.gz|tar.xz, got: $RF_FMT";; esac
+  case "$RF_URL" in *.tar.gz|*.tgz|*.tar.xz|*.txz) ;; *) die "unsupported rootfs URL suffix: $RF_URL";; esac
+  TMP_TARBALL="$APP_FILES/proot/rootfs.$TB_SUFFIX"
   curl -fSL --retry 3 -o "$TMP_TARBALL" "$RF_URL" || die "rootfs download failed"
   echo "$RF_SHA  $TMP_TARBALL" | sha256sum -c - || die "rootfs CHECKSUM MISMATCH"
   need tar
-  tar -xJf "$TMP_TARBALL" -C "$ROOTFS" || die "rootfs unpack failed"
+  # shellcheck disable=SC2086
+  tar $TAR_FLAG "$TMP_TARBALL" -C "$ROOTFS" || die "rootfs unpack failed"
   rm -f "$TMP_TARBALL"
   echo "dsh-android" > "$ROOTFS/etc/hostname" 2>/dev/null || true
   mkdir -p "$ROOTFS/phone/Download" "$ROOTFS/phone/DCIM" "$ROOTFS/dsh-home" "$ROOTFS/opt"
@@ -80,11 +84,12 @@ if [ ! -f "$STAMPS/node.done" ]; then
   log "installing node..."
   NODE_URL="$(json node.tarball)"; NODE_SHA="$(json node.sha256)"
   case "$NODE_SHA" in FILL-IN*) die "distro.json node.sha256 not filled — refuse to install unverified node";; esac
-  TMP_NODE="$APP_FILES/proot/node.tar.xz"
+  case "$NODE_URL" in *.tar.xz|*.txz) NODE_SUFFIX="tar.xz";; *.tar.gz|*.tgz) NODE_SUFFIX="tar.gz";; *) die "unsupported node URL suffix: $NODE_URL";; esac
+  TMP_NODE="$APP_FILES/proot/node.$NODE_SUFFIX"
   curl -fSL --retry 3 -o "$TMP_NODE" "$NODE_URL" || die "node download failed"
   echo "$NODE_SHA  $TMP_NODE" | sha256sum -c - || die "node CHECKSUM MISMATCH"
   mkdir -p "$APP_FILES/proot/node-stage"
-  tar -xJf "$TMP_NODE" -C "$APP_FILES/proot/node-stage" || die "node unpack failed"
+  case "$NODE_SUFFIX" in tar.xz) tar -xJf "$TMP_NODE" -C "$APP_FILES/proot/node-stage";; *) tar -xzf "$TMP_NODE" -C "$APP_FILES/proot/node-stage";; esac || die "node unpack failed"
   rm -f "$TMP_NODE"
   # rootfs is just a dir on host: copy straight into guest /opt/node
   rm -rf "$ROOTFS/opt/node"
@@ -96,12 +101,26 @@ else
   log "node: cached, skip"
 fi
 
+# ---- 3.5 zen-adapter payload (checksum-verified copy into guest /opt) ----
+if [ ! -f "$STAMPS/zen.done" ] || [ "$HERE/payload/zen-adapter.mjs" -nt "$STAMPS/zen.done" ]; then
+  log "installing zen-adapter payload..."
+  [ -f "$HERE/payload/zen-adapter.mjs" ] || die "payload missing: $HERE/payload/zen-adapter.mjs"
+  [ -f "$HERE/payload/zen-adapter.sha256" ] || die "payload checksum missing: $HERE/payload/zen-adapter.sha256"
+  echo "$(cat "$HERE/payload/zen-adapter.sha256")  $HERE/payload/zen-adapter.mjs" | sha256sum -c - || die "zen-adapter CHECKSUM MISMATCH"
+  cp "$HERE/payload/zen-adapter.mjs" "$ROOTFS/opt/zen-adapter.mjs" || die "zen payload copy failed"
+  date > "$STAMPS/zen.done"
+  log "zen payload OK"
+else
+  log "zen payload: cached, skip"
+fi
+
 # ---- 4. dsh (pinned npm version, inside guest) ----
 if [ ! -f "$STAMPS/dsh.done" ]; then
   log "installing dsh inside guest..."
   DSH_PKG="$(json dsh.npm_package)@$(json dsh.version)"
-  # npm runs INSIDE proot so anything arch-sensitive targets the guest userland
-  sh "$HERE/launch-dsh.sh" exec -- npm install -g "$DSH_PKG" \
+  # npm runs INSIDE proot so anything arch-sensitive targets the guest userland.
+  # MUST use exec-npm (npm-safe env, never plain env -i) + explicit --prefix.
+  sh "$HERE/launch-dsh.sh" exec-npm -- npm install -g --prefix /opt/node "$DSH_PKG" \
     || die "guest npm install $DSH_PKG failed"
   date > "$STAMPS/dsh.done"
   log "dsh OK"
