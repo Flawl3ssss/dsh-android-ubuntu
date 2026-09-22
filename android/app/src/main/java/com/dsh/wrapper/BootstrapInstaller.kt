@@ -15,7 +15,7 @@ import java.security.MessageDigest
  * executable (assets exec-бит не хранят).
  *
  * Дерево назначения (канон distro.json layout_on_device, APP_FILES=filesDir):
- *   filesDir/dsh-bootstrap/{*.sh,distro.json,payload/*,log-collect.sh}
+ *   filesDir/dsh-bootstrap/{scripts, distro.json, payload dir, log-collect.sh}
  *   filesDir/proot/{lib,rootfs,...}   — качает install.sh
  *   filesDir/dsh/{run,logs}           — pidfiles и логи entry.sh
  *   filesDir/dsh-home                 — DSH_HOME (бинд /dsh-home)

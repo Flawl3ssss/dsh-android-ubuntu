@@ -31,7 +31,7 @@ object ZenManager {
             Log.w(DshConfig.LOG_TAG, "no zen launcher yet: $script")
             return false
         }
-        val out = run(script, "start", mapOf("ZEN_API_KEY" to key))
+        val out = run(script, "start", mapOf("ZEN_API_KEY" to (key ?: "")))
         Log.i(DshConfig.LOG_TAG, "zen start rc=${out.rc}")
         return out.rc == 0
     }
